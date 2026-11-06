@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#174d3a">
+  <meta name="description" content="جمعيتي - نظام تسيير جمعية المستقبل الشبانية للتراث ببنورة">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <title>جمعيتي</title>
+  <style>
+    :root{--green:#174d3a;--gold:#d9b66f;--sand:#f6f3ea;--ink:#20332a;--muted:#718078}
+    *{box-sizing:border-box}body{margin:0;background:var(--sand);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}
+    header{background:var(--green);color:white;padding:28px 18px 24px;border-radius:0 0 24px 24px;text-align:center}
+    header h1{margin:0;color:var(--gold);font-size:30px}header p{margin:7px 0 0;font-size:14px}
+    main{max-width:760px;margin:auto;padding:18px}
+    .panel,.tile{background:white;border:1px solid #e8dfca;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 3px 12px #173d2a0b}
+    h2{font-size:19px;color:var(--green);margin:0 0 12px}
+    label{display:block;font-size:14px;margin:12px 0 6px}
+    input{width:100%;padding:13px;border:1px solid #d8dfd9;border-radius:10px;font-size:16px;background:#fff}
+    button{border:0;border-radius:11px;background:var(--green);color:white;padding:13px 16px;font-size:15px;font-weight:700;cursor:pointer}
+    button.secondary{background:#e9efe9;color:var(--green)}button:disabled{opacity:.55}
+    .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.row button{flex:1}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .tile{margin:0;min-height:112px;cursor:pointer}.tile .ico{font-size:25px}.tile strong{display:block;color:var(--green);margin:7px 0 4px}.tile small{color:var(--muted)}
+    .muted{color:var(--muted);font-size:13px}.hidden{display:none!important}.status{padding:10px;border-radius:10px;background:#edf4ed;color:var(--green);font-size:13px;margin-top:10px}
+    .error{background:#fff0ed;color:#9b3022}.topline{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
+    ul{padding-right:20px}li{padding:7px 0;border-bottom:1px solid #eee}footer{text-align:center;color:#89958d;font-size:12px;padding:20px}
+    @media(min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  </style>
+</head>
+<body>
+<header><h1>جَمْعِيَّتِي</h1><p>نظام تسيير الجمعيات</p><p>جمعية المستقبل الشبانية للتراث · بنورة – غرداية</p></header>
+<main>
+  <section id="login" class="panel">
+    <h2>تسجيل دخول المسؤولين</h2>
+    <p class="muted">الدخول مخصص للمستخدمين الرسميين الذين أنشأت الجمعية حساباتهم مسبقًا.</p>
+    <label for="email">البريد الإلكتروني</label><input id="email" type="email" autocomplete="username" placeholder="name@example.com">
+    <label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" placeholder="كلمة المرور">
+    <div style="margin-top:14px"><button id="loginBtn" style="width:100%">تسجيل الدخول</button></div>
+    <div id="loginMsg" class="status hidden" role="status"></div>
+  </section>
+  <section id="dashboard" class="hidden">
+    <div class="topline"><div><strong id="welcome">مرحبًا</strong><div class="muted" id="roleLabel"></div></div><button class="secondary" id="logoutBtn">خروج</button></div>
+    <div class="grid" id="modules"></div>
+  </section>
+  <section id="records" class="panel hidden">
+    <div class="topline"><h2 id="recordsTitle">السجلات</h2><button class="secondary" id="backBtn">رجوع</button></div>
+    <div id="recordsBody" class="muted">اختر قسمًا لعرض بياناته.</div>
+  </section>
+  <footer>جمعيتي © 2026</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://kxlnkuqnqleihjijfwzv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_nH0UQ79T1YccIinwSaEcLA_HoHnlK6";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const modules = [
+  {key:"members",title:"إدارة الأعضاء",sub:"ملفات المنخرطين",icon:"👥",roles:["president","secretary"]},
+  {key:"subscriptions",title:"الاشتراكات",sub:"متابعة اشتراكات الأعضاء",icon:"💳",roles:["president","secretary"]},
+  {key:"meetings",title:"الاجتماعات",sub:"الجلسات والمحاضر",icon:"📅",roles:["president","secretary"]},
+  {key:"activities",title:"الأنشطة",sub:"الأنشطة والإنجازات",icon:"🎯",roles:["president","secretary","activities_manager","media_manager"]},
+  {key:"programs",title:"البرامج",sub:"البرامج السنوية",icon:"🗓️",roles:["president","secretary","activities_manager"]},
+  {key:"incomes",title:"المداخيل",sub:"الموارد المالية",icon:"📈",roles:["president","treasurer"]},
+  {key:"expenses",title:"المصاريف",sub:"النفقات المالية",icon:"📉",roles:["president","treasurer"]},
+  {key:"grants",title:"المنح",sub:"طلبات وإعانات",icon:"🏛️",roles:["president","treasurer"]},
+  {key:"archive",title:"الأرشيف",sub:"الوثائق والمحفوظات",icon:"📚",roles:["president","secretary","media_manager"]},
+  {key:"association_settings",title:"إعدادات الجمعية",sub:"بيانات الجمعية",icon:"⚙️",roles:["president"]}
+];
+let currentProfile = null;
+function showMsg(el,msg,isError=false){el.textContent=msg;el.classList.remove("hidden","error");if(isError)el.classList.add("error")}
+function showDashboard(profile){
+  currentProfile=profile;$("login").classList.add("hidden");$("dashboard").classList.remove("hidden");$("records").classList.add("hidden");
+  $("welcome").textContent="مرحبًا، "+profile.full_name;$("roleLabel").textContent="الصلاحية: "+profile.role;
+  $("modules").innerHTML="";
+  modules.filter(m=>m.roles.includes(profile.role)).forEach(m=>{
+    const card=document.createElement("button");card.className="tile";card.type="button";
+    card.innerHTML=`<span class="ico">${m.icon}</span><strong>${m.title}</strong><small>${m.sub}</small>`;
+    card.addEventListener("click",()=>loadTable(m));$("modules").appendChild(card);
+  });
+}
+async function restoreSession(){
+  const {data:{session}}=await db.auth.getSession();
+  if(session) await verifyProfile();
+}
+async function verifyProfile(){
+  const {data:{user},error:userErr}=await db.auth.getUser();
+  if(userErr||!user){$("dashboard").classList.add("hidden");$("login").classList.remove("hidden");return}
+  const {data,error}=await db.from("profiles").select("id,full_name,role,active").eq("id",user.id).single();
+  if(error||!data||!data.active){await db.auth.signOut();showMsg($("loginMsg"),"الحساب غير مفعّل أو لا يوجد ملف مستخدم. راجع رئيس الجمعية.",true);return}
+  showDashboard(data);
+}
+$("loginBtn").addEventListener("click",async()=>{
+  const btn=$("loginBtn");btn.disabled=true;$("loginMsg").classList.add("hidden");
+  const {error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error)showMsg($("loginMsg"),"تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.",true);else await verifyProfile();
+  btn.disabled=false;
+});
+$("logoutBtn").addEventListener("click",async()=>{await db.auth.signOut();currentProfile=null;$("dashboard").classList.add("hidden");$("records").classList.add("hidden");$("login").classList.remove("hidden")});
+$("backBtn").addEventListener("click",()=>$("records").classList.add("hidden"));
+const labels={members:["full_name","membership_number","phone","status"],subscriptions:["subscription_year","amount","payment_date","status"],meetings:["title","meeting_date","location"],activities:["title","activity_type","activity_date","location"],programs:["title","start_date","end_date","status"],incomes:["title","amount","income_date","source"],expenses:["title","amount","expense_date","beneficiary"],grants:["title","funding_source","amount","status"],archive:["title","category","document_date"],association_settings:["association_name","phone","email"]};
+const nice={full_name:"الاسم",membership_number:"رقم الانخراط",phone:"الهاتف",status:"الحالة",subscription_year:"السنة",amount:"المبلغ",payment_date:"تاريخ الدفع",title:"العنوان",meeting_date:"تاريخ الاجتماع",location:"المكان",activity_type:"نوع النشاط",activity_date:"تاريخ النشاط",start_date:"البداية",end_date:"النهاية",income_date:"تاريخ الإيراد",source:"المصدر",expense_date:"تاريخ المصروف",beneficiary:"المستفيد",funding_source:"جهة التمويل",category:"التصنيف",document_date:"التاريخ",association_name:"اسم الجمعية",email:"البريد الإلكتروني"};
+async function loadTable(m){
+  $("records").classList.remove("hidden");$("recordsTitle").textContent=m.title;$("recordsBody").textContent="جارٍ تحميل البيانات...";
+  const cols=labels[m.key].join(",");
+  let query=db.from(m.key).select(cols).limit(30);
+  if(m.key==="members")query=query.order("full_name");
+  else if(m.key==="subscriptions")query=query.order("subscription_year",{ascending:false});
+  else if(m.key==="activities")query=query.order("activity_date",{ascending:false});
+  else if(m.key==="meetings")query=query.order("meeting_date",{ascending:false});
+  const {data,error}=await query;
+  if(error){$("recordsBody").textContent="تعذر تحميل البيانات أو لا تسمح صلاحيات حسابك بالاطلاع عليها.";return}
+  if(!data.length){$("recordsBody").textContent="لا توجد سجلات لعرضها حاليًا.";return}
+  const ul=document.createElement("ul");
+  data.forEach(row=>{const li=document.createElement("li");li.textContent=labels[m.key].map(k=>(nice[k]||k)+": "+(row[k]??"—")).join(" · ");ul.appendChild(li)});
+  $("recordsBody").replaceChildren(ul);
+}
+db.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"){$("dashboard").classList.add("hidden");$("login").classList.remove("hidden")}});
+restoreSession();
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+</script>
+</body></html>

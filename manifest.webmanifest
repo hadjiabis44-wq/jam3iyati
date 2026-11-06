@@ -1,0 +1,12 @@
+{
+  "name": "جمعيتي - نظام تسيير الجمعيات",
+  "short_name": "جمعيتي",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f3ea",
+  "theme_color": "#174d3a",
+  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
